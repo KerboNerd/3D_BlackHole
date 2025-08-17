@@ -1,0 +1,250 @@
+/* NASA PUNK // Black Hole Simulator (CSS-only)
+   Design: bold typography, neon accents, grid overlays, diagnostic HUD
+*/
+
+:root {
+  --bg-0: #02040a;
+  --bg-1: #070b14;
+  --text: #cfe3ff;
+  --muted: #7c8fa9;
+  --accent: #00ffe5;
+  --accent-2: #e6002e;
+  --grid: rgba(0,255,229,0.15);
+  --grid-strong: rgba(0,255,229,0.35);
+
+  --tilt: 62deg;
+  --spin-speed: 42s; /* base rotation speed */
+  --lensing-blur: 2px;
+  --lensing-contrast: 170%;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  color: var(--text);
+  background: radial-gradient(120% 140% at 50% 120%, #05080e 0%, #04070d 45%, var(--bg-0) 100%);
+  font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  letter-spacing: 0.03em;
+  overflow: hidden;
+}
+
+/* HUD: brand + telemetry */
+.hud {
+  position: fixed;
+  z-index: 30;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+.hud--tl { top: 16px; left: 16px; }
+.hud--br { right: 16px; bottom: 16px; text-align: right; }
+.hud .brand { font-size: 18px; color: var(--accent); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent), transparent 40%)); }
+.hud .brand span { color: var(--accent-2); margin: 0 2px; }
+.hud .subtitle { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.hud .build { font-size: 10px; color: var(--muted); opacity: 0.8; margin-top: 2px; }
+
+.hud--br .panel-title { color: var(--accent); font-size: 12px; margin-bottom: 8px; }
+.hud--br .metrics { display: grid; gap: 4px; justify-items: end; }
+.hud--br .metric { font-size: 12px; color: var(--muted); }
+.hud--br .metric span { margin-right: 8px; opacity: 0.8; }
+.hud--br .metric b { color: var(--text); letter-spacing: 0.05em; margin-left: 8px; }
+.hud--br .panel-hint { font-size: 10px; margin-top: 10px; color: var(--muted); opacity: 0.8; }
+
+/* Controls (CSS-only toggles affecting variables via :checked ~ sibling) */
+.controls {
+  position: fixed;
+  z-index: 40;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--bg-1), transparent 35%);
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 70%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent), transparent 85%) inset, 0 10px 30px rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px) saturate(115%);
+  border-radius: 8px;
+}
+.controls .control { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+.controls .control input { appearance: none; width: 16px; height: 16px; border: 1px solid var(--accent); border-radius: 3px; display: grid; place-items: center; background: transparent; }
+.controls .control input:checked { background: var(--accent); box-shadow: 0 0 12px color-mix(in srgb, var(--accent), transparent 60%); }
+.controls .control span { font-size: 11px; color: var(--text); letter-spacing: 0.15em; }
+
+/* Scene + 3D universe container */
+.scene { position: fixed; inset: 0; perspective: 900px; z-index: 1; }
+.universe { position: absolute; inset: 0; transform-style: preserve-3d; }
+
+/* Starfield (parallax layers via pseudo-elements) */
+.starfield { position: absolute; inset: 0; z-index: 0; }
+.starfield::before,
+.starfield::after {
+  content: "";
+  position: absolute;
+  left: -50vw; top: -50vh; right: -50vw; bottom: -50vh; /* overscan for drift */
+  background-repeat: repeat;
+  pointer-events: none;
+}
+/* Dense nearby stars */
+.starfield::before {
+  background-image:
+    radial-gradient(1px 1px at 18px 24px, rgba(255,255,255,0.9) 99%, transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(160,220,255,0.9) 99%, transparent),
+    radial-gradient(1px 1px at 260px 120px, rgba(255,255,255,0.8) 99%, transparent),
+    radial-gradient(1px 1px at 190px 200px, rgba(180,200,255,0.9) 99%, transparent),
+    radial-gradient(1px 1px at 60px 160px, rgba(255,255,255,0.9) 99%, transparent),
+    radial-gradient(1px 1px at 300px 40px, rgba(210,240,255,0.9) 99%, transparent);
+  background-size: 220px 220px;
+  animation: starDrift1 120s linear infinite;
+  opacity: 0.9;
+}
+/* Sparse distant stars */
+.starfield::after {
+  background-image:
+    radial-gradient(1px 1px at 40px 90px, rgba(255,255,255,0.6) 99%, transparent),
+    radial-gradient(1px 1px at 200px 30px, rgba(200,220,255,0.6) 99%, transparent),
+    radial-gradient(1px 1px at 340px 140px, rgba(255,255,255,0.55) 99%, transparent),
+    radial-gradient(1px 1px at 120px 200px, rgba(255,255,255,0.6) 99%, transparent);
+  background-size: 360px 360px;
+  animation: starDrift2 220s linear infinite;
+  opacity: 0.7;
+}
+@keyframes starDrift1 { to { transform: translate3d(-180px, -240px, 0); } }
+@keyframes starDrift2 { to { transform: translate3d(-240px, -120px, 0); } }
+
+/* Grid overlay (NASA Punk diagnostic grid) */
+.grid-overlay {
+  position: absolute; inset: 0; z-index: 2;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 360ms ease;
+}
+
+/* Black hole construct */
+.black-hole {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: min(75vmin, 82vh);
+  height: min(75vmin, 82vh);
+  transform: translate(-50%, -50%);
+  transform-style: preserve-3d;
+}
+/* Tilt the whole stack for 3D feel */
+.black-hole > * { transform-style: preserve-3d; }
+.black-hole { --tilt-local: var(--tilt); }
+.black-hole { perspective: 1000px; }
+
+/* Warper: backdrop filter simulating lensing and contrast amplification */
+.warper {
+  position: absolute; inset: 0; margin: auto; width: 64%; height: 64%; border-radius: 50%;
+  transform: translateZ(1px) rotateX(var(--tilt-local));
+  backdrop-filter: contrast(var(--lensing-contrast)) saturate(140%) blur(var(--lensing-blur));
+  -webkit-backdrop-filter: contrast(var(--lensing-contrast)) saturate(140%) blur(var(--lensing-blur));
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 65%);
+  box-shadow: 0 0 120px color-mix(in srgb, var(--accent), transparent 70%) inset, 0 0 36px color-mix(in srgb, var(--accent), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+/* Event horizon */
+.hole {
+  position: absolute; inset: 0; margin: auto; width: 22%; height: 22%; border-radius: 50%;
+  transform: translateZ(2px) rotateX(var(--tilt-local));
+  background: radial-gradient(60% 60% at 50% 45%, #000 35%, #020202 60%, #000 70%);
+  box-shadow: 0 0 220px 40px rgba(0,0,0,0.85), inset 0 0 120px rgba(0,0,0,0.95);
+}
+
+/* Photon sphere (thin hot ring) */
+.photon-sphere {
+  position: absolute; inset: 0; margin: auto; width: 30%; height: 30%; border-radius: 50%;
+  transform: translateZ(3px) rotateX(var(--tilt-local));
+  background:
+    radial-gradient(closest-side, transparent calc(60% - 1px), rgba(255,255,255,0.95) 60% 62%, transparent 63%),
+    conic-gradient(from 0deg, rgba(0,255,229,0.0), rgba(0,255,229,0.35), rgba(229,0,46,0.25), rgba(0,255,229,0.4), rgba(229,0,46,0.3), rgba(0,255,229,0.0));
+  filter: drop-shadow(0 0 10px rgba(0,255,229,0.35)) drop-shadow(0 0 24px rgba(0,255,229,0.25));
+  animation: photonGlow 4.8s ease-in-out infinite;
+}
+@keyframes photonGlow {
+  0%, 100% { opacity: 0.9; filter: drop-shadow(0 0 10px rgba(0,255,229,0.4)) drop-shadow(0 0 32px rgba(0,255,229,0.3)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 14px rgba(0,255,229,0.55)) drop-shadow(0 0 42px rgba(0,255,229,0.35)); }
+}
+
+/* Accretion disks */
+.disk {
+  position: absolute; inset: 0; margin: auto; border-radius: 50%;
+  transform: translateZ(0) rotateX(var(--tilt-local));
+  mix-blend-mode: screen;
+}
+.disk--inner { width: 64%; height: 64%; }
+.disk--outer { width: 86%; height: 86%; opacity: 0.8; }
+
+.disk--inner {
+  background: conic-gradient(from 0deg,
+    rgba(0,255,229,0.0) 0deg 40deg,
+    rgba(0,255,229,0.35) 40deg 55deg,
+    rgba(229,0,46,0.35) 55deg 85deg,
+    rgba(0,255,229,0.35) 85deg 110deg,
+    rgba(229,0,46,0.4) 110deg 150deg,
+    rgba(0,255,229,0.0) 150deg 360deg);
+  filter: blur(0.4px) drop-shadow(0 0 12px rgba(0,255,229,0.35));
+  animation: spinInner var(--spin-speed) linear infinite;
+}
+.disk--outer {
+  background: conic-gradient(from 120deg,
+    rgba(0,255,229,0.0) 0deg 30deg,
+    rgba(0,255,229,0.25) 30deg 55deg,
+    rgba(229,0,46,0.3) 55deg 95deg,
+    rgba(0,255,229,0.25) 95deg 130deg,
+    rgba(229,0,46,0.3) 130deg 170deg,
+    rgba(0,255,229,0.0) 170deg 360deg);
+  filter: blur(0.6px) drop-shadow(0 0 22px rgba(229,0,46,0.25));
+  animation: spinOuter calc(var(--spin-speed) * 1.6) linear infinite reverse;
+}
+@keyframes spinInner { to { transform: translateZ(0) rotateX(var(--tilt-local)) rotateZ(360deg); } }
+@keyframes spinOuter { to { transform: translateZ(0) rotateX(var(--tilt-local)) rotateZ(360deg); } }
+
+/* Relativistic jets */
+.jet {
+  position: absolute; left: 50%; width: 1.2vmin; height: 36vmin; transform: translateX(-50%) rotateX(var(--tilt-local));
+  background: linear-gradient(to top, rgba(0,255,229,0.0) 0%, rgba(0,255,229,0.25) 30%, rgba(255,255,255,0.6) 60%, rgba(0,255,229,0.0) 100%);
+  filter: blur(0.2px) drop-shadow(0 0 16px rgba(0,255,229,0.3));
+  mix-blend-mode: screen;
+}
+.jet--top { bottom: 52%; border-top-left-radius: 50% 12vmin; border-top-right-radius: 50% 12vmin; }
+.jet--bottom { top: 52%; transform: translateX(-50%) rotateX(var(--tilt-local)) rotateZ(180deg); border-bottom-left-radius: 50% 12vmin; border-bottom-right-radius: 50% 12vmin; }
+
+/* Labels (NASA Punk brackets) */
+.label {
+  position: absolute; font-size: 10px; letter-spacing: 0.22em; color: var(--text); text-shadow: 0 0 6px rgba(0,255,229,0.2);
+  pointer-events: none; opacity: 0.9;
+}
+.label::before, .label::after { content: ""; display: inline-block; width: 10px; height: 1px; background: var(--accent); vertical-align: middle; margin: 0 6px; opacity: 0.7; }
+.label--horizon { top: 50%; left: calc(50% + 18vmin); transform: translateY(-50%); }
+.label--photon { top: calc(50% - 18vmin); left: 50%; transform: translateX(-50%); }
+
+/* Scanlines overlay for retro CRT feel */
+.scanlines {
+  position: fixed; inset: 0; z-index: 50; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.035), rgba(255,255,255,0.035) 1px, transparent 1px, transparent 3px);
+  opacity: 0.6;
+  mix-blend-mode: soft-light;
+}
+
+/* Toggle-driven theming */
+/* Fast rotation */
+body:has(#fast:checked) .scene { --spin-speed: 14s; }
+/* Extreme lensing */
+body:has(#extreme:checked) .scene { --lensing-blur: 6px; --lensing-contrast: 240%; }
+/* Grid visibility */
+.scene .grid-overlay { opacity: 0; }
+body:has(#grid:checked) .scene .grid-overlay { opacity: 1; }
+
+/* Accessibility: reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .disk--inner, .disk--outer, .starfield::before, .starfield::after, .photon-sphere { animation: none !important; }
+}
