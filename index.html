@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#00ffe5">
+    <title>NASA PUNK // Black Hole Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="hud hud--tl">
+      <div class="brand">NASA<span>//</span>PUNK</div>
+      <div class="subtitle">BLACK HOLE SIMULATOR</div>
+      <div class="build">BUILD v0.1</div>
+    </header>
+
+    <form class="controls" autocomplete="off">
+      <label class="control">
+        <input id="fast" type="checkbox">
+        <span>FAST ROTATION</span>
+      </label>
+      <label class="control">
+        <input id="extreme" type="checkbox">
+        <span>EXTREME LENSING</span>
+      </label>
+      <label class="control">
+        <input id="grid" type="checkbox" checked>
+        <span>SHOW GRID</span>
+      </label>
+    </form>
+
+    <main class="scene" role="main">
+      <div class="starfield" aria-hidden="true"></div>
+
+      <section class="universe" aria-label="3D visual scene">
+        <div class="grid-overlay" aria-hidden="true"></div>
+
+        <article class="black-hole" aria-label="Black hole visualization">
+          <div class="warper" aria-hidden="true"></div>
+          <div class="hole" aria-hidden="true"></div>
+          <div class="photon-sphere" aria-hidden="true"></div>
+
+          <div class="disk disk--inner" aria-hidden="true"></div>
+          <div class="disk disk--outer" aria-hidden="true"></div>
+
+          <div class="jet jet--top" aria-hidden="true"></div>
+          <div class="jet jet--bottom" aria-hidden="true"></div>
+
+          <div class="label label--horizon">EVENT HORIZON</div>
+          <div class="label label--photon">PHOTON SPHERE</div>
+        </article>
+      </section>
+    </main>
+
+    <aside class="hud hud--br">
+      <div class="panel-title">TELEMETRY</div>
+      <div class="metrics">
+        <div class="metric"><span>M</span><b>4.3e6 M☉</b></div>
+        <div class="metric"><span>a*</span><b>0.88</b></div>
+        <div class="metric"><span>rₛ</span><b>1.3e10 m</b></div>
+        <div class="metric"><span>γ</span><b>1.6</b></div>
+      </div>
+      <div class="panel-hint">Toggle controls to alter the visualization. CSS-only.</div>
+    </aside>
+
+    <div class="scanlines" aria-hidden="true"></div>
+  </body>
+</html>
